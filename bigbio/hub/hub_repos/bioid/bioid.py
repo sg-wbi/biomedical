@@ -77,6 +77,21 @@ ANN_OFFSET_FIXES = {
     4009068: {(4, 38): (4, 30)},
 }
 
+# DB_NAME_TO_ENTITY_TYPE = {
+#     "BAO": "assay",  # https://www.ebi.ac.uk/ols/ontologies/bao
+#     "CHEBI": "chemical",
+#     "CL": "cell",  # https://www.ebi.ac.uk/ols/ontologies/cl
+#     "Corum": "protein",  # https://mips.helmholtz-muenchen.de/corum/
+#     "GO": "gene",  # https://geneontology.org/
+#     "PubChem": "chemical",
+#     "Rfam": "rna",  # https://rfam.org/
+#     "Uberon": "anatomy",
+#     "Cellosaurus": "cellline",
+#     "NCBI gene": "gene",
+#     "NCBI taxon": "species",
+#     "Uniprot": "protein",
+# }
+
 
 class BioidDataset(datasets.GeneratorBasedBuilder):
     """TODO: Short description of my dataset."""
@@ -112,21 +127,6 @@ class BioidDataset(datasets.GeneratorBasedBuilder):
         "tissue",
         "organism",
     ]
-
-    DB_NAME_TO_ENTITY_TYPE = {
-        "BAO": "assay",  # https://www.ebi.ac.uk/ols/ontologies/bao
-        "CHEBI": "chemical",
-        "CL": "cell",  # https://www.ebi.ac.uk/ols/ontologies/cl
-        "Corum": "protein",  # https://mips.helmholtz-muenchen.de/corum/
-        "GO": "gene",  # https://geneontology.org/
-        "PubChem": "chemical",
-        "Rfam": "rna",  # https://rfam.org/
-        "Uberon": "anatomy",
-        "Cellosaurus": "cellline",
-        "NCBI gene": "gene",
-        "NCBI taxon": "species",
-        "Uniprot": "protein",
-    }
 
     def _info(self) -> datasets.DatasetInfo:
         # Create the source schema; this schema will keep all keys/information/labels as close to the original dataset as possible.
@@ -196,10 +196,7 @@ class BioidDataset(datasets.GeneratorBasedBuilder):
             datasets.SplitGenerator(
                 name=datasets.Split.TRAIN,
                 # Whatever you put in gen_kwargs will be passed to _generate_examples
-                gen_kwargs={
-                    "data_dir": data_dir,
-                    "split": "train",
-                },
+                gen_kwargs={"data_dir": data_dir},
             ),
         ]
 
@@ -314,14 +311,13 @@ class BioidDataset(datasets.GeneratorBasedBuilder):
             else []
         )
 
-        # ideally we should have canonical entity types w/ a  dedicated enum like `Tasks`
+        # # ideally we should have canonical entity types w/ a  dedicated enum like `Tasks`
+        # if db_name in self.ENTITY_TYPES_NOT_NORMALIZED:
+        #     entity_type = db_name
+        # else:
+        #     entity_type = self.DB_NAME_TO_ENTITY_TYPE[db_name]
 
-        if db_name in self.ENTITY_TYPES_NOT_NORMALIZED:
-            entity_type = db_name
-        else:
-            entity_type = self.DB_NAME_TO_ENTITY_TYPE[db_name]
-
-        return entity_type, normalized
+        return db_name, normalized
 
     def get_entity(
         self,
@@ -351,9 +347,7 @@ class BioidDataset(datasets.GeneratorBasedBuilder):
 
         return entity
 
-    def _generate_examples(
-        self, data_dir: str, split: str
-    ) -> Iterator[Tuple[int, Dict]]:
+    def _generate_examples(self, data_dir: str) -> Iterator[Tuple[int, Dict]]:
         """Yields examples as (key, example) tuples."""
 
         data = self.load_data(data_dir=data_dir)
